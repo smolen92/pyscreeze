@@ -1,7 +1,7 @@
 # PyScreeze - PyScreeze is a simple, cross-platform screenshot module for Python 2 and 3.
 # By Al Sweigart al@inventwithpython.com
 
-__version__ = '0.1.30'
+__version__ = '1.0.0'
 
 import collections
 import datetime
@@ -59,7 +59,8 @@ GRAYSCALE_DEFAULT = True
 # instead of returning None. In hindsight, this change came too late, so I'm
 # changing it back to returning None. But I'm also including this option for
 # folks who would rather have it raise an exception.
-USE_IMAGE_NOT_FOUND_EXCEPTION = False
+# For version 1.0.0, USE_IMAGE_NOT_FOUND_EXCEPTION is set to True by default.
+USE_IMAGE_NOT_FOUND_EXCEPTION = True
 
 GNOMESCREENSHOT_EXISTS = False
 try:

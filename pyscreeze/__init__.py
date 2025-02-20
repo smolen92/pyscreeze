@@ -63,10 +63,13 @@ GRAYSCALE_DEFAULT = True
 USE_IMAGE_NOT_FOUND_EXCEPTION = True
 
 GNOMESCREENSHOT_EXISTS = False
+SPECTACLE_EXISTS = False
 try:
     if sys.platform.startswith('linux'):
         whichProc = subprocess.Popen(['which', 'gnome-screenshot'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         GNOMESCREENSHOT_EXISTS = whichProc.wait() == 0
+        whichProc = subprocess.Popen(['which', 'spectacle'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        SPECTACLE_EXISTS = whichProc.wait() == 0
 except OSError as ex:
     if ex.errno == errno.ENOENT:
         # if there is no "which" program to find gnome-screenshot, then assume there
@@ -597,39 +600,39 @@ def _screenshot_linux(imageFilename=None, region=None):
     # on Linux, which is necessary to have screenshots work with Wayland
     # (the replacement for x11.) Therefore, for 3.7 and later, PyScreeze
     # uses/requires 9.2.0.
-    #if PILLOW_VERSION >= (9, 2, 0) and GNOMESCREENSHOT_EXISTS:
+    if PILLOW_VERSION >= (9, 2, 0) and GNOMESCREENSHOT_EXISTS:
         # Pillow doesn't need tmpFilename because it works entirely in memory and doesn't
         # need to save an image file to disk.
-    #    im = ImageGrab.grab()  # use Pillow's grab() for Pillow 9.2.0 and later.
+        im = ImageGrab.grab()  # use Pillow's grab() for Pillow 9.2.0 and later.
 
-    #    if imageFilename is not None:
-    #        im.save(imageFilename)
+        if imageFilename is not None:
+            im.save(imageFilename)
 
-    #    if region is None:
+        if region is None:
             # Return the full screenshot.
-    #        return im
-    #    else:
+            return im
+        else:
             # Return just a region of the screenshot.
-    #        assert len(region) == 4, 'region argument must be a tuple of four ints'  # TODO fix this
-    #        assert isinstance(region[0], int) and isinstance(region[1], int) and isinstance(region[2], int) and isinstance(region[3], int), 'region argument must be a tuple of four ints'
-    #        im = im.crop((region[0], region[1], region[2] + region[0], region[3] + region[1]))
-    #        return im
-    #elif RUNNING_X11 and SCROT_EXISTS:  # scrot only runs on X11, not on Wayland.
+            assert len(region) == 4, 'region argument must be a tuple of four ints'  # TODO fix this
+            assert isinstance(region[0], int) and isinstance(region[1], int) and isinstance(region[2], int) and isinstance(region[3], int), 'region argument must be a tuple of four ints'
+            im = im.crop((region[0], region[1], region[2] + region[0], region[3] + region[1]))
+            return im
+    elif RUNNING_X11 and SCROT_EXISTS:  # scrot only runs on X11, not on Wayland.
         # Even if gnome-screenshot exists, use scrot on X11 because gnome-screenshot
         # has this annoying screen flash effect that you can't disable, but scrot does not.
-    #    subprocess.call(['scrot', '-z', tmpFilename])
-    #elif GNOMESCREENSHOT_EXISTS:  # gnome-screenshot runs on Wayland and X11.
-    #    subprocess.call(['gnome-screenshot', '-f', tmpFilename])
-    #elif RUNNING_WAYLAND and SCROT_EXISTS and not GNOMESCREENSHOT_EXISTS:
-    #    raise PyScreezeException(
-    #        'Your computer uses the Wayland window system. Scrot works on the X11 window system but not Wayland. You must install gnome-screenshot by running `sudo apt install gnome-screenshot`'  # noqa
-    #    )
-    #else:
-    #    raise Exception(
-    #        'To take screenshots, you must install Pillow version 9.2.0 or greater and gnome-screenshot by running `sudo apt install gnome-screenshot`'  # noqa
-    #    )
-
-    subprocess.call(['spectacle', '-fnbo', tmpFilename])
+        subprocess.call(['scrot', '-z', tmpFilename])
+    elif GNOMESCREENSHOT_EXISTS:  # gnome-screenshot runs on Wayland and X11.
+        subprocess.call(['gnome-screenshot', '-f', tmpFilename])
+    elif SPECTACLE_EXISTS:
+        subprocess.call(['spectacle', '-fnbo', tmpFilename])
+    elif RUNNING_WAYLAND and SCROT_EXISTS and not GNOMESCREENSHOT_EXISTS:
+        raise PyScreezeException(
+            'Your computer uses the Wayland window system. Scrot works on the X11 window system but not Wayland. You must install gnome-screenshot by running `sudo apt install gnome-screenshot`'  # noqa
+        )
+    else:
+        raise Exception(
+            'To take screenshots, you must install Pillow version 9.2.0 or greater and gnome-screenshot by running `sudo apt install gnome-screenshot`'  # noqa
+        )
 
     im = Image.open(tmpFilename)
 
